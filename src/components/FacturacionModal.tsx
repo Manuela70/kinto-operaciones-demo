@@ -38,8 +38,10 @@ const DISPONIBILIDAD_OPTIONS: Disponibilidad[] = ['Disponible', 'No disponible']
 
 export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }: FacturacionModalProps) {
   const { role } = useRole();
-  // Admin Local y Asesor, una vez facturado, ven una vista resumida de solo
-  // lectura (sin Fecha de asignación, sin DUAS, sin botones) — per mockup.
+  // Según HU016: solo el Administrador Kinto factura (escenario 1). Asesor y
+  // Administrador Local siempre ven una vista resumida de solo lectura —
+  // sin Fecha de asignación, sin DUAS, sin botones — sea cual sea el estado
+  // de envío (escenario 4).
   const isReducedRole = role !== 'Admin_Kinto';
 
   const [vin, setVin] = useState('');
@@ -47,6 +49,7 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
   const [fechaDisponibilidad, setFechaDisponibilidad] = useState('');
   const [fechaAsignacion, setFechaAsignacion] = useState('');
   const [fechaFacturacion, setFechaFacturacion] = useState('');
+  const [fechaActivacion, setFechaActivacion] = useState('');
   const [duasFiles, setDuasFiles] = useState<UploadedFile[]>([]);
   const [enviado, setEnviado] = useState(false);
 
@@ -65,6 +68,7 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
       setFechaDisponibilidad(assignment.fechaDisponibilidad);
       setFechaAsignacion(assignment.fechaAsignacion);
       setFechaFacturacion(assignment.fechaFacturacion);
+      setFechaActivacion(assignment.fechaActivacion ?? '');
       setDuasFiles(assignment.duasFiles);
       setEnviado(assignment.facturaEnviada);
     }
@@ -72,7 +76,7 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
 
   if (!assignment) return null;
 
-  const isLocked = enviado;
+  const isLocked = enviado || isReducedRole;
 
   // "Guardar" ofrece confirmar guardado parcial (mismo patrón que Devolución)
   const handleGuardarClick = () => setPartialSaveOpen(true);
@@ -142,9 +146,15 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
               </Typography>
             </Box>
             <Chip
-              label={enviado ? 'Unidad Facturada' : 'Pendiente de asignación'}
+              label={
+                fechaActivacion
+                  ? 'Unidad Facturada'
+                  : duasFiles.length > 0
+                    ? 'Pendiente aprobación Finanzas TDP'
+                    : 'Pendiente de asignación'
+              }
               size="small"
-              color={enviado ? 'success' : 'info'}
+              color={fechaActivacion ? 'success' : duasFiles.length > 0 ? 'warning' : 'info'}
               variant="outlined"
             />
           </Box>
@@ -201,39 +211,10 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
             </Box>
           </Box>
 
-          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
-            {!(isReducedRole && isLocked) && (
-              <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
-                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                  Fecha de asignación*
-                </Typography>
-                <TextField
-                  fullWidth
-                  type="date"
-                  value={fechaAsignacion}
-                  onChange={(e) => setFechaAsignacion(e.target.value)}
-                  disabled={isLocked}
-                />
-              </Box>
-            )}
-            <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
+          {!isReducedRole && (
+            <Box sx={{ mb: 2 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Fecha facturación*
-              </Typography>
-              <TextField
-                fullWidth
-                type="date"
-                value={fechaFacturacion}
-                onChange={(e) => setFechaFacturacion(e.target.value)}
-                disabled={isLocked}
-              />
-            </Box>
-          </Box>
-
-          {!(isReducedRole && isLocked) && (
-            <>
-              <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                Adjuntar DUAS (.pdf, .docx)*
+                Adjuntar DUAS (cualquier formato, incluido ZIP)*
               </Typography>
               {duasFiles.length > 0 ? (
                 <Button
@@ -262,10 +243,53 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
                   Subir ⬆
                 </Box>
               )}
-            </>
+            </Box>
           )}
+
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2, mb: 2 }}>
+            {!isReducedRole && (
+              <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Fecha de asignación*
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="date"
+                  value={fechaAsignacion}
+                  onChange={(e) => setFechaAsignacion(e.target.value)}
+                  disabled={isLocked}
+                />
+              </Box>
+            )}
+            <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
+              <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                Fecha facturación*
+              </Typography>
+              <TextField
+                fullWidth
+                type="date"
+                value={fechaFacturacion}
+                onChange={(e) => setFechaFacturacion(e.target.value)}
+                disabled={isLocked}
+              />
+            </Box>
+            {!isReducedRole && (
+              <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
+                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                  Fecha activación
+                </Typography>
+                <TextField
+                  fullWidth
+                  type="date"
+                  value={fechaActivacion}
+                  onChange={(e) => setFechaActivacion(e.target.value)}
+                  disabled={isLocked || duasFiles.length === 0}
+                />
+              </Box>
+            )}
+          </Box>
         </DialogContent>
-        {!(isReducedRole && isLocked) && (
+        {!isReducedRole && (
           <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
             <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
               Enviar
@@ -281,7 +305,7 @@ export function FacturacionModal({ open, assignment, onClose, onSaved, onSent }:
         open={uploadOpen}
         onClose={() => setUploadOpen(false)}
         onUpload={(files) => setDuasFiles((prev) => [...prev, ...files])}
-        accept={['.pdf', '.docx']}
+        accept={[]}
         maxFiles={3}
         title="Adjuntar"
       />

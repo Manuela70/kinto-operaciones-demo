@@ -15,6 +15,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { Assignment, UploadedFile } from '../types';
+import { useRole } from '../context/RoleContext';
 import { AssignmentUploadDialog } from './AssignmentUploadDialog';
 import { FileViewerDialog } from './FileViewerDialog';
 import { PartialSaveDialog } from './PartialSaveDialog';
@@ -29,9 +30,20 @@ interface EntregaClienteModalProps {
   onSent: () => void;
 }
 
+/**
+ * Entrega al cliente — según HU023: la llena Asesor / Administrador Local
+ * (escenario 1); el Administrador Kinto solo visualiza, sin poder editar
+ * (escenario 3) — en los adjuntos, solo puede descargar, nunca cargar.
+ */
 export function EntregaClienteModal({ open, assignment, onClose, onSaved, onSent }: EntregaClienteModalProps) {
+  const { role } = useRole();
+  const isViewerRole = role === 'Admin_Kinto';
+
   const [fechaUio, setFechaUio] = useState('');
   const [fechaEntrega, setFechaEntrega] = useState('');
+  // HU023: caso en que el asesor olvidó registrar la Fecha de UIO — Admin Kinto
+  // puede iniciarla manualmente (único campo editable para ese rol en este modal).
+  const [adminUioOverride, setAdminUioOverride] = useState(false);
   const [comentarios, setComentarios] = useState('');
   const [actaFiles, setActaFiles] = useState<UploadedFile[]>([]);
   const [imagenesFiles, setImagenesFiles] = useState<UploadedFile[]>([]);
@@ -52,12 +64,13 @@ export function EntregaClienteModal({ open, assignment, onClose, onSaved, onSent
       setActaFiles(assignment.actaFiles);
       setImagenesFiles(assignment.imagenesFiles);
       setEnviado(assignment.entregaEnviado);
+      setAdminUioOverride(false);
     }
   }, [open, assignment]);
 
   if (!assignment) return null;
 
-  const isLocked = enviado;
+  const isLocked = enviado || isViewerRole;
 
   const handleGuardarClick = () => setPartialSaveOpen(true);
 
@@ -87,6 +100,16 @@ export function EntregaClienteModal({ open, assignment, onClose, onSaved, onSent
   const handleSuccessAccept = () => {
     setSuccessOpen(false);
     onClose();
+  };
+
+  const handleAdminUioSave = () => {
+    setAdminUioOverride(false);
+    onSaved();
+    setSuccessMessage({
+      title: 'Fecha de UIO registrada',
+      message: 'Se inició la Fecha de UIO en nombre del asesor.',
+    });
+    setSuccessOpen(true);
   };
 
   return (
@@ -128,13 +151,36 @@ export function EntregaClienteModal({ open, assignment, onClose, onSaved, onSent
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
                 Fecha de UIO*
               </Typography>
-              <TextField
-                fullWidth
-                type="date"
-                value={fechaUio}
-                onChange={(e) => setFechaUio(e.target.value)}
-                disabled={isLocked}
-              />
+              {isViewerRole && !enviado && !fechaUio && !adminUioOverride ? (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  color="warning"
+                  onClick={() => setAdminUioOverride(true)}
+                >
+                  Iniciar UIO
+                </Button>
+              ) : (
+                <TextField
+                  fullWidth
+                  type="date"
+                  value={fechaUio}
+                  onChange={(e) => setFechaUio(e.target.value)}
+                  disabled={isLocked && !adminUioOverride}
+                />
+              )}
+              {adminUioOverride && (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  color="warning"
+                  sx={{ mt: 1 }}
+                  disabled={!fechaUio}
+                  onClick={handleAdminUioSave}
+                >
+                  Guardar Fecha de UIO
+                </Button>
+              )}
             </Box>
             <Box sx={{ flex: '1 1 220px', minWidth: 200 }}>
               <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -204,14 +250,16 @@ export function EntregaClienteModal({ open, assignment, onClose, onSaved, onSent
             disabled={isLocked}
           />
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
-          <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
-            Enviar
-          </Button>
-          <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
-            Guardar
-          </Button>
-        </DialogActions>
+        {!isViewerRole && (
+          <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
+            <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
+              Enviar
+            </Button>
+            <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
+              Guardar
+            </Button>
+          </DialogActions>
+        )}
       </Dialog>
 
       <AssignmentUploadDialog

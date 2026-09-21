@@ -17,6 +17,8 @@ export function filterServices(
     if (filters.version && s.version !== filters.version) return false;
     if (filters.dealer && s.dealer !== filters.dealer) return false;
     if (filters.local && s.local !== filters.local) return false;
+    if (filters.asesor && !s.asesor.toLowerCase().includes(filters.asesor.toLowerCase())) return false;
+    if (filters.asesorEntrega && !s.asesorEntrega.toLowerCase().includes(filters.asesorEntrega.toLowerCase())) return false;
     if (filters.tipoServicio && s.tipoServicio !== filters.tipoServicio) return false;
     if (filters.fechaServicioDesde && s.fechaServicio < filters.fechaServicioDesde) return false;
     if (filters.fechaServicioHasta && s.fechaServicio > filters.fechaServicioHasta) return false;

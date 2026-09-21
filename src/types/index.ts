@@ -84,7 +84,7 @@ export type EstadoDocumentacion = 'Iniciada' | 'Pendiente' | 'Completada';
 
 export type Disponibilidad = 'Disponible' | 'No disponible';
 
-export type EstadoUnidadDlr = 'En almacén DLR' | 'Unidad terminada';
+export type EstadoUnidadDlr = 'En almacén DLR' | 'En Equipamiento' | 'Unidad terminada';
 
 export interface Assignment {
   id: string; // "ID Contrato", e.g. "C202509876"
@@ -102,7 +102,8 @@ export interface Assignment {
   estadoProceso: EstadoProceso;
   estadoVehiculo: EstadoVehiculo;
   documentacion: EstadoDocumentacion;
-  asesor: string;
+  asesor: string; // Asesor inicial (venta)
+  asesorEntrega: string; // Asesor de entrega / asignado
   tieneAccesorios: boolean;
 
   // Facturación
@@ -111,6 +112,7 @@ export interface Assignment {
   fechaDisponibilidad: string;
   fechaAsignacion: string;
   fechaFacturacion: string;
+  fechaActivacion: string;
   duasFiles: UploadedFile[];
   facturaEnviada: boolean;
 
@@ -185,15 +187,23 @@ export interface AssignmentFilterValues {
   estadoProceso: string;
   estadoVehiculo: string;
   estadoDocumentacion: string;
+  asesor: string;
+  asesorEntrega: string;
 }
 
 // ---- Módulo Servicios ----
 
-export type TipoServicio = 'Preventivo' | 'Correctivo' | 'Siniestro';
+export type TipoServicio = 'Preventivo' | 'Correctivo' | 'Carrocería y Pintura' | 'Cambio de neumáticos';
 
 export type EstadoOT = 'Por validar' | 'Aprobado' | 'Pendiente' | 'Rechazado';
 
 export type MonedaServicio = 'Soles' | 'USD';
+
+export interface OrdenCompra {
+  id: string;
+  numero: string;
+  file: UploadedFile | null;
+}
 
 export interface ServiceRecord {
   idOT: string; // e.g. "C202509876"
@@ -209,7 +219,8 @@ export interface ServiceRecord {
   version: string;
   dealer: string;
   local: string;
-  asesor: string;
+  asesor: string; // Asesor inicial (venta)
+  asesorEntrega: string; // Asesor de entrega / asignado
 
   tipoServicio: TipoServicio;
   estadoOT: EstadoOT;
@@ -222,9 +233,24 @@ export interface ServiceRecord {
   monto: string;
   cobrarCliente: boolean;
 
-  cotizacionFiles: UploadedFile[]; // .pdf — todos los tipos
-  imagenesFiles: UploadedFile[]; // .jpg/.png — Correctivo/Siniestro
-  vistoBuenoFiles: UploadedFile[]; // .pdf/.jpg — Correctivo/Siniestro
+  cotizacionFiles: UploadedFile[]; // .pdf/.xlsx/.zip — todos los tipos
+  imagenesFiles: UploadedFile[]; // .jpg/.png — Correctivo/Carrocería y Pintura
+  vistoBuenoFiles: UploadedFile[]; // .pdf/.jpg — Correctivo/Carrocería y Pintura/Cambio de neumáticos (si aplica)
+
+  // HU028/HU029 — Carga de OC (múltiple), habilitada cuando el servicio ya está aprobado
+  ordenesCompra: OrdenCompra[];
+
+  // Carrocería y Pintura (HU027-3)
+  fechaIngresoReparacion?: string;
+  fechaSalidaReparacion?: string;
+  seAtendioSeguro?: boolean;
+  numeroSiniestro?: string;
+  fechaSiniestro?: string;
+  montoDeducible?: string;
+
+  // Cambio de neumáticos (HU027-4)
+  frecuenciaCambio?: string;
+  kmUltimoCambio?: string;
 }
 
 export interface ServiceFilterValues {
@@ -243,6 +269,8 @@ export interface ServiceFilterValues {
   tipoServicio: string;
   fechaServicioDesde: string;
   fechaServicioHasta: string;
+  asesor: string;
+  asesorEntrega: string;
 }
 
 // ---- Módulo Reportería ----
@@ -254,7 +282,10 @@ export type ReportCriterio =
   | 'SERVICIOS'
   | 'KM EXCESO'
   | 'VENCIMIENTO SEGUROS'
-  | 'DEVOLUCIONES';
+  | 'DEVOLUCIONES'
+  | 'CARROCERÍA Y PINTURA'
+  | 'B&P'
+  | 'OC';
 
 export interface ReportLocal {
   code: string;

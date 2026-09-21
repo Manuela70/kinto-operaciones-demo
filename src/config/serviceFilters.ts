@@ -10,7 +10,7 @@ export interface ServiceFilterFieldConfig {
 }
 
 const ESTADO_OPTIONS = ['Por validar', 'Aprobado', 'Pendiente', 'Rechazado'];
-const TIPO_SERVICIO_OPTIONS = ['Preventivo', 'Correctivo', 'Siniestro'];
+const TIPO_SERVICIO_OPTIONS = ['Preventivo', 'Correctivo', 'Carrocería y Pintura', 'Cambio de neumáticos'];
 
 /**
  * Admin Kinto ve el listado global de servicios de todos los locales/dealers,
@@ -26,6 +26,8 @@ function getAdminKintoFilterFields(): ServiceFilterFieldConfig[] {
     { name: 'modelo', label: 'Modelo', type: 'select' },
     { name: 'dealer', label: 'Dealer entrega', type: 'select' },
     { name: 'local', label: 'Local entrega', type: 'select' },
+    { name: 'asesor', label: 'Asesor', type: 'text' },
+    { name: 'asesorEntrega', label: 'Asesor de entrega', type: 'text' },
     { name: 'tipoServicio', label: 'Tipo de servicio', type: 'select', options: TIPO_SERVICIO_OPTIONS },
     { name: 'fechaServicioDesde', label: 'Fecha de servicio (desde)', type: 'date' },
     { name: 'fechaServicioHasta', label: 'Fecha de servicio (hasta)', type: 'date' },
@@ -47,6 +49,8 @@ function getLocalFilterFields(): ServiceFilterFieldConfig[] {
     { name: 'modelo', label: 'Modelo', type: 'select' },
     { name: 'version', label: 'Versión', type: 'select' },
     { name: 'local', label: 'Local entrega', type: 'select' },
+    { name: 'asesor', label: 'Asesor', type: 'text' },
+    { name: 'asesorEntrega', label: 'Asesor de entrega', type: 'text' },
     { name: 'tipoServicio', label: 'Tipo de servicio', type: 'select', options: TIPO_SERVICIO_OPTIONS },
     { name: 'fechaServicioDesde', label: 'Fecha de servicio', type: 'date' },
   ];

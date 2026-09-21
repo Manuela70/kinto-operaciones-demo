@@ -30,6 +30,8 @@ const PLACEHOLDERS: Record<string, string> = {
   estadoProceso: 'Selecciona',
   estadoVehiculo: 'Selecciona',
   estadoDocumentacion: 'Selecciona',
+  asesor: 'Nombre del asesor',
+  asesorEntrega: 'Nombre del asesor de entrega',
 };
 
 function buildInitialValues(fields: FilterFieldConfig[]): Record<string, string> {

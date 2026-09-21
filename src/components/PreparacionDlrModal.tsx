@@ -17,6 +17,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import type { Assignment, EstadoUnidadDlr } from '../types';
+import { useRole } from '../context/RoleContext';
 import { PartialSaveDialog } from './PartialSaveDialog';
 import { ConfirmSendDialog } from './ConfirmSendDialog';
 import { SuccessDialog } from './SuccessDialog';
@@ -29,9 +30,17 @@ interface PreparacionDlrModalProps {
   onSent: () => void;
 }
 
-const ESTADOS: EstadoUnidadDlr[] = ['En almacén DLR', 'Unidad terminada'];
+const ESTADOS: EstadoUnidadDlr[] = ['En almacén DLR', 'En Equipamiento', 'Unidad terminada'];
 
+/**
+ * Preparación DLR — según HU022: la llena Asesor / Administrador Local
+ * (escenario 1); el Administrador Kinto solo visualiza, sin poder editar
+ * (escenario 2).
+ */
 export function PreparacionDlrModal({ open, assignment, onClose, onSaved, onSent }: PreparacionDlrModalProps) {
+  const { role } = useRole();
+  const isViewerRole = role === 'Admin_Kinto';
+
   const [estado, setEstado] = useState<EstadoUnidadDlr | ''>('');
   const [fechaTerminada, setFechaTerminada] = useState('');
   const [enviado, setEnviado] = useState(false);
@@ -51,7 +60,7 @@ export function PreparacionDlrModal({ open, assignment, onClose, onSaved, onSent
 
   if (!assignment) return null;
 
-  const isLocked = enviado;
+  const isLocked = enviado || isViewerRole;
 
   const handleGuardarClick = () => setPartialSaveOpen(true);
 
@@ -143,14 +152,16 @@ export function PreparacionDlrModal({ open, assignment, onClose, onSaved, onSent
             </>
           )}
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
-          <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
-            Enviar
-          </Button>
-          <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
-            Guardar
-          </Button>
-        </DialogActions>
+        {!isViewerRole && (
+          <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
+            <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
+              Enviar
+            </Button>
+            <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
+              Guardar
+            </Button>
+          </DialogActions>
+        )}
       </Dialog>
 
       <PartialSaveDialog

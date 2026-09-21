@@ -8,6 +8,7 @@ import {
   IconButton,
   Box,
   Typography,
+  Tooltip,
 } from '@mui/material';
 import DirectionsCarFilledIcon from '@mui/icons-material/DirectionsCarFilled';
 import ListAltIcon from '@mui/icons-material/ListAlt';
@@ -50,15 +51,58 @@ function formatDate(isoDate: string): string {
  * más cercanos disponibles; pendiente de reemplazo por assets SVG del equipo
  * de diseño, igual que el ícono de "Devolución" en la tabla de Devolución.
  */
-const ACTION_ICONS = [
+const STANDALONE_ICONS = [
   { key: 'accesorios', label: 'Accesorios', Icon: DirectionsCarFilledIcon },
   { key: 'detalles', label: 'Detalles', Icon: ListAltIcon },
+] as const;
+
+// A partir de "Facturación" en adelante, los 5 botones se unifican en una
+// sola columna "Etapas" (pedido de workshop) — mismos íconos, con tooltip.
+const ETAPA_ICONS = [
   { key: 'facturacion', label: 'Facturación', Icon: AssignmentIcon },
   { key: 'preparacionTdp', label: 'Preparación TDP', Icon: FolderOpenIcon },
   { key: 'documentacion', label: 'Documentación', Icon: DescriptionIcon },
   { key: 'preparacionDlr', label: 'Preparación DLR', Icon: PersonAddAlt1Icon },
   { key: 'entregaCliente', label: 'Entrega al cliente', Icon: PersonIcon },
 ] as const;
+
+const ACTION_ICONS = [...STANDALONE_ICONS, ...ETAPA_ICONS] as const;
+
+type EtapaStatus = 'completo' | 'incompleto' | 'no-disponible';
+
+/**
+ * Semáforo de "Etapas": verde = completo, naranja = incompleto (disponible),
+ * gris = aún no disponible. El modelo de datos no tiene un flag explícito de
+ * "etapa habilitada", así que se infiere de la secuencia real del flujo
+ * (Facturación → Prep. TDP → Prep. DLR → Entrega al cliente; Documentación
+ * corre en paralelo con su propio estado). Confirmar con Ale si la regla de
+ * disponibilidad debe ser distinta.
+ */
+function getEtapaStatus(key: (typeof ETAPA_ICONS)[number]['key'], a: Assignment): EtapaStatus {
+  switch (key) {
+    case 'facturacion':
+      return a.facturaEnviada ? 'completo' : 'incompleto';
+    case 'preparacionTdp':
+      if (!a.facturaEnviada) return 'no-disponible';
+      return a.tdpEnviado ? 'completo' : 'incompleto';
+    case 'documentacion':
+      if (a.documentacion === 'Completada') return 'completo';
+      if (a.documentacion === 'Pendiente') return 'no-disponible';
+      return 'incompleto';
+    case 'preparacionDlr':
+      if (!a.tdpEnviado) return 'no-disponible';
+      return a.dlrEnviado ? 'completo' : 'incompleto';
+    case 'entregaCliente':
+      if (!a.dlrEnviado) return 'no-disponible';
+      return a.entregaEnviado ? 'completo' : 'incompleto';
+  }
+}
+
+const ETAPA_STATUS_COLOR: Record<EtapaStatus, string> = {
+  completo: '#c6efce',
+  incompleto: '#ffeb9c',
+  'no-disponible': '#e7e6e6',
+};
 
 export function AssignmentsTable({
   assignments,
@@ -111,7 +155,7 @@ export function AssignmentsTable({
     }
   };
 
-  const totalColumns = (showContractColumns ? 11 : 6) + ACTION_ICONS.length;
+  const totalColumns = (showContractColumns ? 11 : 6) + STANDALONE_ICONS.length + 1;
 
   return (
     <Box>
@@ -122,23 +166,26 @@ export function AssignmentsTable({
               {showContractColumns && (
                 <>
                   <TableCell sx={headerSx}>ID Contrato</TableCell>
+                  <TableCell sx={headerSx}>Serie</TableCell>
                   <TableCell sx={headerSx}>Fecha firma contrato</TableCell>
                   <TableCell sx={headerSx}>Local entrega</TableCell>
                   <TableCell sx={headerSx}>Nombre del cliente</TableCell>
                   <TableCell sx={headerSx}>Vehículo</TableCell>
                 </>
               )}
-              <TableCell sx={headerSx}>Serie</TableCell>
+              {!showContractColumns && <TableCell sx={headerSx}>Serie</TableCell>}
               <TableCell sx={headerSx}>Fecha de estado</TableCell>
               <TableCell sx={headerSx}>Estado proceso</TableCell>
               <TableCell sx={headerSx}>Estado vehículo</TableCell>
               <TableCell sx={headerSx}>Documentación</TableCell>
               <TableCell sx={headerSx}>Asesor</TableCell>
-              {ACTION_ICONS.map(({ key, label }) => (
+              <TableCell sx={headerSx}>Asesor de entrega</TableCell>
+              {STANDALONE_ICONS.map(({ key, label }) => (
                 <TableCell key={key} sx={{ ...headerSx, textAlign: 'center' }}>
                   {label}
                 </TableCell>
               ))}
+              <TableCell sx={{ ...headerSx, textAlign: 'center' }}>Etapas</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -147,13 +194,14 @@ export function AssignmentsTable({
                 {showContractColumns && (
                   <>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.id}</TableCell>
+                    <TableCell>{a.serie || '—'}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(a.fechaFirmaContrato)}</TableCell>
                     <TableCell>{a.localEntrega}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.nombreCliente}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.vehiculo}</TableCell>
                   </>
                 )}
-                <TableCell>{a.serie || '—'}</TableCell>
+                {!showContractColumns && <TableCell>{a.serie || '—'}</TableCell>}
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>{formatDate(a.fechaEstado)}</TableCell>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>
                   <Typography variant="body2" fontWeight={600}>
@@ -167,7 +215,8 @@ export function AssignmentsTable({
                   </Typography>
                 </TableCell>
                 <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.asesor}</TableCell>
-                {ACTION_ICONS.map(({ key, label, Icon }) => {
+                <TableCell sx={{ whiteSpace: 'nowrap' }}>{a.asesorEntrega}</TableCell>
+                {STANDALONE_ICONS.map(({ key, label, Icon }) => {
                   if (key === 'accesorios' && !a.tieneAccesorios) {
                     return (
                       <TableCell key={key} align="center">
@@ -190,6 +239,28 @@ export function AssignmentsTable({
                     </TableCell>
                   );
                 })}
+                <TableCell align="center">
+                  <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'center' }}>
+                    {ETAPA_ICONS.map(({ key, label, Icon }) => {
+                      const status = getEtapaStatus(key, a);
+                      return (
+                        <Tooltip key={key} title={`${label} — ${status === 'completo' ? 'Completo' : status === 'incompleto' ? 'Incompleto' : 'No disponible'}`}>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleAction(key, a)}
+                            aria-label={`${label} — ${a.id || a.serie}`}
+                            sx={{
+                              backgroundColor: ETAPA_STATUS_COLOR[status],
+                              '&:hover': { backgroundColor: ETAPA_STATUS_COLOR[status], opacity: 0.8 },
+                            }}
+                          >
+                            <Icon fontSize="small" sx={{ color: '#1c2628' }} />
+                          </IconButton>
+                        </Tooltip>
+                      );
+                    })}
+                  </Box>
+                </TableCell>
               </TableRow>
             ))}
             {pageData.length === 0 && (

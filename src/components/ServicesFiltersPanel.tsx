@@ -34,6 +34,8 @@ const PLACEHOLDERS: Record<string, string> = {
   tipoServicio: 'Selecciona',
   fechaServicioDesde: '',
   fechaServicioHasta: '',
+  asesor: 'Nombre del asesor',
+  asesorEntrega: 'Nombre del asesor de entrega',
 };
 
 function buildInitialValues(fields: ServiceFilterFieldConfig[]): Record<string, string> {

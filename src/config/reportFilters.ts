@@ -6,6 +6,9 @@ export const REPORT_CRITERIOS: ReportCriterio[] = [
   'KM EXCESO',
   'VENCIMIENTO SEGUROS',
   'DEVOLUCIONES',
+  'CARROCERÍA Y PINTURA',
+  'B&P',
+  'OC',
 ];
 
 export function getReportFilterFields(criterio: ReportCriterio | ''): ReportFieldConfig[] {
@@ -96,6 +99,34 @@ export function getReportFilterFields(criterio: ReportCriterio | ''): ReportFiel
           options: ['Devolución', 'Anticipada', 'Robo'],
         },
         { name: 'estadoContrato', label: 'Estado contrato', type: 'select', options: ['Activo', 'No activo'] },
+      ];
+    case 'CARROCERÍA Y PINTURA':
+      return [
+        { name: 'cliente', label: 'Cliente', type: 'text', placeholder: 'Nombre del cliente' },
+        { name: 'placa', label: 'Placa', type: 'text', placeholder: 'ABC-123' },
+        { name: 'serie', label: 'Serie', type: 'text', placeholder: '12345X' },
+        { name: 'fechaSiniestroDesde', label: 'Fecha de siniestro (desde)', type: 'date' },
+        { name: 'fechaSiniestroHasta', label: 'Fecha de siniestro (hasta)', type: 'date' },
+      ];
+    case 'B&P':
+      return [
+        { name: 'cliente', label: 'Cliente', type: 'text', placeholder: 'Nombre del cliente' },
+        { name: 'placa', label: 'Placa', type: 'text', placeholder: 'ABC-123' },
+        { name: 'serie', label: 'Serie', type: 'text', placeholder: '12345X' },
+        { name: 'fechaIngresoReparacionDesde', label: 'Fecha de ingreso a reparación (desde)', type: 'date' },
+        { name: 'fechaIngresoReparacionHasta', label: 'Fecha de ingreso a reparación (hasta)', type: 'date' },
+      ];
+    case 'OC':
+      return [
+        { name: 'cliente', label: 'Cliente', type: 'text', placeholder: 'Nombre del cliente' },
+        { name: 'placa', label: 'Placa', type: 'text', placeholder: 'ABC-123' },
+        { name: 'serie', label: 'Serie', type: 'text', placeholder: '12345X' },
+        {
+          name: 'tipoServicio',
+          label: 'Tipo de servicio',
+          type: 'select',
+          options: ['Preventivo', 'Correctivo', 'Siniestro'],
+        },
       ];
     default:
       return [];

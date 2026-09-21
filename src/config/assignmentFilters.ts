@@ -36,6 +36,8 @@ export function getAssignmentFilterFields(role: Role): FilterFieldConfig[] {
     { name: 'modelo', label: 'Modelo', type: 'dropdown', options: ['Corolla', 'RAV4', 'Hilux', 'Yaris'] },
     { name: 'cliente', label: 'Cliente', type: 'text' },
     { name: 'ruc', label: 'RUC', type: 'text' },
+    { name: 'asesor', label: 'Asesor', type: 'text' },
+    { name: 'asesorEntrega', label: 'Asesor de entrega', type: 'text' },
   ];
 
   const estadoProceso: FilterFieldConfig = {

@@ -11,6 +11,7 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import EditIcon from '@mui/icons-material/Edit';
+import RateReviewIcon from '@mui/icons-material/RateReview';
 import FirstPageIcon from '@mui/icons-material/FirstPage';
 import LastPageIcon from '@mui/icons-material/LastPage';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -80,6 +81,7 @@ export function ServicesTable({ services, onOpenReview, onOpenForm, onOpenReadOn
                   <TableCell sx={headerSx}>Comentario</TableCell>
                   <TableCell sx={headerSx}>ID OT</TableCell>
                   <TableCell sx={headerSx}>Asesor</TableCell>
+                  <TableCell sx={headerSx}>Asesor de entrega</TableCell>
                   <TableCell sx={headerSx}>Dealer</TableCell>
                   <TableCell sx={headerSx}>Local</TableCell>
                 </>
@@ -121,20 +123,32 @@ export function ServicesTable({ services, onOpenReview, onOpenForm, onOpenReadOn
                     <TableCell>{s.comentario || ''}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{s.idOtDisplay}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{s.asesor}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>{s.asesorEntrega}</TableCell>
                     <TableCell sx={{ whiteSpace: 'nowrap' }}>{s.dealer}</TableCell>
                     <TableCell>{s.local}</TableCell>
                   </>
                 )}
                 <TableCell align="center">
                   {isAdminKinto ? (
-                    <IconButton
-                      size="small"
-                      color="primary"
-                      onClick={() => onOpenReview(s)}
-                      aria-label={`Gestionar servicio ${s.idOT}`}
-                    >
-                      <VisibilityIcon fontSize="small" />
-                    </IconButton>
+                    s.estadoOT === 'Aprobado' ? (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onOpenReadOnly(s)}
+                        aria-label={`Ver servicio ${s.idOT}`}
+                      >
+                        <VisibilityIcon fontSize="small" />
+                      </IconButton>
+                    ) : (
+                      <IconButton
+                        size="small"
+                        color="primary"
+                        onClick={() => onOpenReview(s)}
+                        aria-label={`Gestionar servicio ${s.idOT}`}
+                      >
+                        <RateReviewIcon fontSize="small" />
+                      </IconButton>
+                    )
                   ) : s.estadoOT === 'Aprobado' ? (
                     <IconButton
                       size="small"

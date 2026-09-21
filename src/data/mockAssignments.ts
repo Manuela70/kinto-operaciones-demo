@@ -13,6 +13,13 @@ const NOMBRES = [
   'Jorge Luis Castillo',
 ];
 
+const ASESORES_ENTREGA = [
+  'Mariana Salcedo Ibáñez',
+  'Renzo Vidal Quispe',
+  'Camila Herrera Zúñiga',
+  'Fabián Rojas Medina',
+];
+
 const ESTADOS: Array<Pick<Assignment, 'estadoProceso' | 'estadoVehiculo' | 'documentacion'>> = [
   { estadoProceso: 'Pendiente de asignación', estadoVehiculo: 'Sin asignación', documentacion: 'Iniciada' },
   { estadoProceso: 'En Facturación', estadoVehiculo: 'Unidad asignada', documentacion: 'Iniciada' },
@@ -44,6 +51,7 @@ function buildAssignment(index: number): Assignment {
     estadoVehiculo: estado.estadoVehiculo,
     documentacion: estado.documentacion,
     asesor: 'Antonio Torres Vargas',
+    asesorEntrega: ASESORES_ENTREGA[index % ASESORES_ENTREGA.length],
     tieneAccesorios: hasAccesorios,
 
     vin: 'ABCDEFGH123456789',
@@ -51,6 +59,7 @@ function buildAssignment(index: number): Assignment {
     fechaDisponibilidad: '2026-09-15',
     fechaAsignacion: '2026-09-15',
     fechaFacturacion: '2026-09-15',
+    fechaActivacion: '',
     duasFiles: [],
     facturaEnviada: false,
 

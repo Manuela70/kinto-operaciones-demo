@@ -74,6 +74,13 @@ export function ServicesList() {
     if (reviewTarget) updateServiceState(reviewTarget.idOT, { estadoOT: 'Rechazado' });
   }, [reviewTarget, updateServiceState]);
 
+  const handleSavedOc = useCallback(
+    (ordenesCompra: ServiceRecord['ordenesCompra']) => {
+      if (reviewTarget) updateServiceState(reviewTarget.idOT, { ordenesCompra });
+    },
+    [reviewTarget, updateServiceState],
+  );
+
   const handleFormSaved = useCallback(
     (data: Partial<ServiceRecord>) => {
       if (formTarget) {
@@ -95,6 +102,7 @@ export function ServicesList() {
           dealer: data.dealer ?? '',
           local: data.local ?? '',
           asesor: '',
+          asesorEntrega: '',
           tipoServicio: data.tipoServicio ?? 'Preventivo',
           estadoOT: 'Por validar',
           comentario: data.comentario ?? '',
@@ -106,6 +114,7 @@ export function ServicesList() {
           cotizacionFiles: data.cotizacionFiles ?? [],
           imagenesFiles: data.imagenesFiles ?? [],
           vistoBuenoFiles: data.vistoBuenoFiles ?? [],
+          ordenesCompra: data.ordenesCompra ?? [],
         };
         setServices((prev) => [newRecord, ...prev]);
         setFiltered((prev) => [newRecord, ...prev]);
@@ -155,6 +164,11 @@ export function ServicesList() {
         service={reviewTarget}
         onClose={() => setReadOnlyOpen(false)}
         readOnly
+        // HU028/HU029: una vez Aprobado, el Asesor/Admin Local puede seguir
+        // cargando OC aunque el resto del formulario sea de solo lectura;
+        // Admin Kinto en esta misma vista solo puede descargar.
+        ocEditable={role !== 'Admin_Kinto'}
+        onSavedOc={handleSavedOc}
       />
 
       <ServiceFormModal

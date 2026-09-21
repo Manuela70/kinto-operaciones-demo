@@ -14,6 +14,7 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
 import type { Assignment } from '../types';
+import { useRole } from '../context/RoleContext';
 import { PartialSaveDialog } from './PartialSaveDialog';
 import { ConfirmSendDialog } from './ConfirmSendDialog';
 import { SuccessDialog } from './SuccessDialog';
@@ -27,14 +28,13 @@ interface PreparacionTdpModalProps {
 }
 
 /**
- * Preparación TDP — según mockup real "Asignación - A. Kinto (preparación,
- * doc) - VF Aprobado" (páginas 03/04/06/07/08/09): header con ícono de auto,
- * "Serie {serie}" y Chip de estado ("Unidad Facturada" → "Entregado DLR" al
- * enviar), dos campos de fecha (Fecha de preparación PDI / Fecha de entrega
- * dealer) y botones Enviar/Guardar con el mismo patrón de confirmación y
- * bloqueo que Facturación.
+ * Preparación TDP — según HU017: la llena el Administrador Kinto (escenario 1);
+ * Asesor y Administrador Local solo visualizan, sin poder editar (escenario 3).
  */
 export function PreparacionTdpModal({ open, assignment, onClose, onSaved, onSent }: PreparacionTdpModalProps) {
+  const { role } = useRole();
+  const isViewerRole = role !== 'Admin_Kinto';
+
   const [fechaPreparacionPdi, setFechaPreparacionPdi] = useState('');
   const [fechaEntregaDealer, setFechaEntregaDealer] = useState('');
   const [enviado, setEnviado] = useState(false);
@@ -54,7 +54,7 @@ export function PreparacionTdpModal({ open, assignment, onClose, onSaved, onSent
 
   if (!assignment) return null;
 
-  const isLocked = enviado;
+  const isLocked = enviado || isViewerRole;
 
   const handleGuardarClick = () => setPartialSaveOpen(true);
 
@@ -150,14 +150,16 @@ export function PreparacionTdpModal({ open, assignment, onClose, onSaved, onSent
             </Box>
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
-          <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
-            Enviar
-          </Button>
-          <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
-            Guardar
-          </Button>
-        </DialogActions>
+        {!isViewerRole && (
+          <DialogActions sx={{ px: 3, pb: 2, justifyContent: 'flex-start' }}>
+            <Button onClick={handleEnviarClick} variant="outlined" color="inherit" disabled={isLocked}>
+              Enviar
+            </Button>
+            <Button onClick={handleGuardarClick} variant="contained" color="secondary" disabled={isLocked}>
+              Guardar
+            </Button>
+          </DialogActions>
+        )}
       </Dialog>
 
       <PartialSaveDialog

@@ -13,7 +13,7 @@ const NAV_CONFIG: Record<Role, NavItem[]> = {
     { label: 'Servicios', path: '/services' },
     { label: 'Devolución', path: '/contracts' },
     { label: 'Reporte', path: '/report' },
-    { label: 'Admin', path: '/placeholder' },
+    { label: 'Mantenimiento', path: '/placeholder' },
   ],
   Admin_Local: [
     { label: 'Solicitudes', path: '/placeholder' },

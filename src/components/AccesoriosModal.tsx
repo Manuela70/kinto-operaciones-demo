@@ -13,6 +13,7 @@ import {
   IconButton,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DownloadIcon from '@mui/icons-material/Download';
 import type { Assignment } from '../types';
 
 interface AccesoriosModalProps {
@@ -122,16 +123,25 @@ export function AccesoriosModal({ open, assignment, onClose, onSaved }: Accesori
             }}
           >
             <Typography variant="body1" fontWeight="bold">
-              Total
+              Total (No incluye IGV)
             </Typography>
             <Typography variant="body1" fontWeight="bold">
               ${total.toFixed(2)}
             </Typography>
           </Box>
           <Typography variant="caption" color="text.secondary">
-            Valor calculado automáticamente
+            Valor calculado automáticamente. No incluye IGV.
           </Typography>
         </Box>
+
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<DownloadIcon />}
+          sx={{ mt: 2 }}
+        >
+          Descargar cotización
+        </Button>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button onClick={onClose} variant="outlined" color="inherit">

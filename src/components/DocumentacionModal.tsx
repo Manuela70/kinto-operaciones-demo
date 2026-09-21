@@ -18,6 +18,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import type { Assignment, UploadedFile } from '../types';
+import { useRole } from '../context/RoleContext';
 import { AssignmentUploadDialog } from './AssignmentUploadDialog';
 import { FileViewerDialog } from './FileViewerDialog';
 import { PartialSaveDialog } from './PartialSaveDialog';
@@ -35,8 +36,8 @@ type UploadTarget = 'tive' | 'tarjeta' | 'soat' | 'poliza';
 
 const STEPS: { key: StepKey; title: string; completedLabel: string }[] = [
   { key: 'placas', title: 'Documentación placas', completedLabel: 'Inmatriculación completo' },
-  { key: 'lunas', title: 'Lunas polarizadas', completedLabel: 'Permiso de polarizado completo' },
   { key: 'soat', title: 'SOAT y seguro', completedLabel: 'SOAT y seguro completo' },
+  { key: 'lunas', title: 'Lunas polarizadas', completedLabel: 'Permiso de polarizado completo' },
 ];
 
 /** Botón de adjuntar/ver archivos, reutilizado en las 3 secciones */
@@ -45,12 +46,15 @@ function AttachButton({
   files,
   onUpload,
   onView,
+  disabled,
 }: {
   label: string;
   files: UploadedFile[];
   onUpload: () => void;
   onView: () => void;
+  disabled?: boolean;
 }) {
+  const hasFiles = files.length > 0;
   return (
     <Box>
       <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -61,15 +65,24 @@ function AttachButton({
         variant="outlined"
         endIcon={<ArrowForwardIcon />}
         sx={{ justifyContent: 'space-between' }}
-        onClick={files.length > 0 ? onView : onUpload}
+        disabled={disabled && !hasFiles}
+        onClick={hasFiles ? onView : onUpload}
       >
-        {files.length > 0 ? 'Archivos' : 'Subir'}
+        {hasFiles ? 'Archivos' : 'Subir'}
       </Button>
     </Box>
   );
 }
 
+/**
+ * Gestión de documentación — según HU018-021: la llena el Administrador
+ * Kinto (escenario 1 de cada HU); Asesor y Administrador Local solo
+ * visualizan, sin poder editar (escenario 3/4 de cada HU).
+ */
 export function DocumentacionModal({ open, assignment, onClose, onSaved }: DocumentacionModalProps) {
+  const { role } = useRole();
+  const isViewerRole = role !== 'Admin_Kinto';
+
   const [expanded, setExpanded] = useState<StepKey | false>('placas');
   const [completed, setCompleted] = useState<Record<StepKey, boolean>>({
     placas: false,
@@ -80,6 +93,7 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
   // Documentación placas
   const [fechaInmatriculacion, setFechaInmatriculacion] = useState('');
   const [fechaIngresoSunarp, setFechaIngresoSunarp] = useState('');
+  const [numeroTitulo, setNumeroTitulo] = useState('');
   const [fechaRecepcionTive, setFechaRecepcionTive] = useState('');
   const [tiveFiles, setTiveFiles] = useState<UploadedFile[]>([]);
   const [placa, setPlaca] = useState('');
@@ -191,6 +205,7 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaInmatriculacion}
                       onChange={(e) => setFechaInmatriculacion(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha de ingreso a Sunarp*"
@@ -199,6 +214,14 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaIngresoSunarp}
                       onChange={(e) => setFechaIngresoSunarp(e.target.value)}
+                      disabled={isViewerRole}
+                    />
+                    <TextField
+                      label="Número de título*"
+                      fullWidth
+                      value={numeroTitulo}
+                      onChange={(e) => setNumeroTitulo(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha de recepción TIVE*"
@@ -207,18 +230,21 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaRecepcionTive}
                       onChange={(e) => setFechaRecepcionTive(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <AttachButton
                       label="Adjuntar TIVE (.pdf)*"
                       files={tiveFiles}
                       onUpload={() => setUploadTarget('tive')}
                       onView={() => setViewerTarget('tive')}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Placa*"
                       fullWidth
                       value={placa}
                       onChange={(e) => setPlaca(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha de envío de placa a DLR*"
@@ -227,15 +253,18 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaEnvioPlacaDlr}
                       onChange={(e) => setFechaEnvioPlacaDlr(e.target.value)}
+                      disabled={isViewerRole}
                     />
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      sx={{ alignSelf: 'flex-end' }}
-                      onClick={() => markCompleteAndNext('placas', 'lunas')}
-                    >
-                      Continuar
-                    </Button>
+                    {!isViewerRole && (
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ alignSelf: 'flex-end' }}
+                        onClick={() => markCompleteAndNext('placas', 'lunas')}
+                      >
+                        Continuar
+                      </Button>
+                    )}
                   </Box>
                 )}
                 {step.key === 'lunas' && (
@@ -247,6 +276,7 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={inicioSolicitudLunas}
                       onChange={(e) => setInicioSolicitudLunas(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha envío permisos DRL*"
@@ -255,6 +285,7 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaEnvioPermisosDrl}
                       onChange={(e) => setFechaEnvioPermisosDrl(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha de recepción tarjeta*"
@@ -263,21 +294,25 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaRecepcionTarjeta}
                       onChange={(e) => setFechaRecepcionTarjeta(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <AttachButton
-                      label="Cargar Tarjeta (.pdf)*"
+                      label="Carga Permiso Luna (.pdf)*"
                       files={tarjetaFiles}
                       onUpload={() => setUploadTarget('tarjeta')}
                       onView={() => setViewerTarget('tarjeta')}
+                      disabled={isViewerRole}
                     />
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      sx={{ alignSelf: 'flex-end' }}
-                      onClick={() => markCompleteAndNext('lunas', 'soat')}
-                    >
-                      Continuar
-                    </Button>
+                    {!isViewerRole && (
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ alignSelf: 'flex-end' }}
+                        onClick={() => markCompleteAndNext('lunas', 'soat')}
+                      >
+                        Continuar
+                      </Button>
+                    )}
                   </Box>
                 )}
                 {step.key === 'soat' && (
@@ -289,6 +324,7 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaEmisionSoat}
                       onChange={(e) => setFechaEmisionSoat(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <TextField
                       label="Fecha de inclusión póliza*"
@@ -297,27 +333,32 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
                       InputLabelProps={{ shrink: true }}
                       value={fechaInclusionPoliza}
                       onChange={(e) => setFechaInclusionPoliza(e.target.value)}
+                      disabled={isViewerRole}
                     />
                     <AttachButton
                       label="Cargar SOAT (.pdf)*"
                       files={soatFiles}
                       onUpload={() => setUploadTarget('soat')}
                       onView={() => setViewerTarget('soat')}
+                      disabled={isViewerRole}
                     />
                     <AttachButton
                       label="Cargar póliza (.pdf)*"
                       files={polizaFiles}
                       onUpload={() => setUploadTarget('poliza')}
                       onView={() => setViewerTarget('poliza')}
+                      disabled={isViewerRole}
                     />
-                    <Button
-                      variant="contained"
-                      color="secondary"
-                      sx={{ alignSelf: 'flex-end' }}
-                      onClick={() => markCompleteAndNext('soat', false)}
-                    >
-                      Finalizar
-                    </Button>
+                    {!isViewerRole && (
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        sx={{ alignSelf: 'flex-end' }}
+                        onClick={() => markCompleteAndNext('soat', false)}
+                      >
+                        Finalizar
+                      </Button>
+                    )}
                   </Box>
                 )}
               </AccordionDetails>
@@ -326,11 +367,13 @@ export function DocumentacionModal({ open, assignment, onClose, onSaved }: Docum
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button onClick={onClose} variant="outlined" color="inherit">
-            Cancelar
+            {isViewerRole ? 'Cerrar' : 'Cancelar'}
           </Button>
-          <Button onClick={handleGuardarClick} variant="contained" color="secondary">
-            Guardar
-          </Button>
+          {!isViewerRole && (
+            <Button onClick={handleGuardarClick} variant="contained" color="secondary">
+              Guardar
+            </Button>
+          )}
         </DialogActions>
       </Dialog>
 

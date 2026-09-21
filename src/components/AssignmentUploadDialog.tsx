@@ -38,6 +38,8 @@ function formatFileSize(bytes: number): string {
 }
 
 function isValidFileType(fileName: string, acceptedExtensions: string[]): boolean {
+  // Lista vacía = cualquier tipo de archivo (usado por DUAS, que acepta todo incluido ZIP).
+  if (acceptedExtensions.length === 0) return true;
   const ext = fileName.slice(fileName.lastIndexOf('.')).toLowerCase();
   return acceptedExtensions.includes(ext);
 }
@@ -53,7 +55,9 @@ export function AssignmentUploadDialog({ open, onClose, onUpload, accept, maxFil
   const [isDragOver, setIsDragOver] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const formatInfo = `Formatos aceptados: ${accept.join(', ')} · Máximo ${maxFiles} archivo${maxFiles > 1 ? 's' : ''}`;
+  const formatInfo = accept.length === 0
+    ? `Cualquier formato de archivo · Máximo ${maxFiles} archivo${maxFiles > 1 ? 's' : ''}`
+    : `Formatos aceptados: ${accept.join(', ')} · Máximo ${maxFiles} archivo${maxFiles > 1 ? 's' : ''}`;
 
   const addFiles = useCallback((fileList: FileList | null) => {
     if (!fileList) return;
@@ -163,7 +167,7 @@ export function AssignmentUploadDialog({ open, onClose, onUpload, accept, maxFil
         <input
           ref={fileInputRef}
           type="file"
-          accept={accept.join(',')}
+          accept={accept.length === 0 ? undefined : accept.join(',')}
           multiple={maxFiles > 1}
           onChange={handleFileInputChange}
           style={{ display: 'none' }}

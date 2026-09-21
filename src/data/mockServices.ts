@@ -14,7 +14,14 @@ const NOMBRES = [
 ];
 
 const ESTADOS: EstadoOT[] = ['Por validar', 'Aprobado', 'Pendiente', 'Rechazado'];
-const TIPOS: TipoServicio[] = ['Preventivo', 'Correctivo', 'Siniestro'];
+const TIPOS: TipoServicio[] = ['Preventivo', 'Correctivo', 'Carrocería y Pintura', 'Cambio de neumáticos'];
+
+const ASESORES_ENTREGA = [
+  'Mariana Salcedo Ibáñez',
+  'Renzo Vidal Quispe',
+  'Camila Herrera Zúñiga',
+  'Fabián Rojas Medina',
+];
 
 function buildService(index: number): ServiceRecord {
   const estado = ESTADOS[index % ESTADOS.length];
@@ -37,6 +44,7 @@ function buildService(index: number): ServiceRecord {
     dealer: 'Juan Carlos Díaz Contreras',
     local: 'C.C. Jockey Plaza',
     asesor: 'Juan Carlos Díaz Contreras',
+    asesorEntrega: ASESORES_ENTREGA[index % ASESORES_ENTREGA.length],
 
     tipoServicio: tipo,
     estadoOT: estado,
@@ -50,6 +58,7 @@ function buildService(index: number): ServiceRecord {
     cotizacionFiles: [],
     imagenesFiles: [],
     vistoBuenoFiles: [],
+    ordenesCompra: [],
   };
 }
 

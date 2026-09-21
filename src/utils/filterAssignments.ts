@@ -16,6 +16,8 @@ export function filterAssignments(
     if (filters.estadoProceso && a.estadoProceso !== filters.estadoProceso) return false;
     if (filters.estadoVehiculo && a.estadoVehiculo !== filters.estadoVehiculo) return false;
     if (filters.estadoDocumentacion && a.documentacion !== filters.estadoDocumentacion) return false;
+    if (filters.asesor && !a.asesor.toLowerCase().includes(filters.asesor.toLowerCase())) return false;
+    if (filters.asesorEntrega && !a.asesorEntrega.toLowerCase().includes(filters.asesorEntrega.toLowerCase())) return false;
     return true;
   });
 }
