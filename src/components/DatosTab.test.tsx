@@ -3,7 +3,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { DatosTab } from './DatosTab';
 import { RoleProvider, useRole } from '../context/RoleContext';
 import type { Contract, Role } from '../types';
-import { ReactNode, useEffect } from 'react';
+import { useEffect } from 'react';
+import type { ReactNode } from 'react';
 
 function createContract(overrides: Partial<Contract> = {}): Contract {
   return {

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { filterContracts } from './filterContracts';
-import { Contract } from '../types';
+import type { Contract } from '../types';
 
 const sampleContracts: Contract[] = [
   {

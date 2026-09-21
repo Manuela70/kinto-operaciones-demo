@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { validateReturnForm } from './validateReturnForm';
-import { ReturnFormData } from '../types';
+import type { ReturnFormData } from '../types';
 
 function makeValidForm(tipoDevolucion: 'Devolución' | 'Anticipada' | 'Robo' = 'Devolución'): ReturnFormData {
   const files: Record<string, { id: string; name: string; size: number; type: string }[]> = {

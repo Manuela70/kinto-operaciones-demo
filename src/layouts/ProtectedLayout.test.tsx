@@ -5,14 +5,6 @@ import { RoleProvider, useRole } from '../context/RoleContext';
 import { ProtectedLayout } from './ProtectedLayout';
 import { useEffect } from 'react';
 
-function SetRoleAndNavigate({ role }: { role: 'Admin_Kinto' | 'Admin_Local' | 'Asesor' }) {
-  const { setRole } = useRole();
-  useEffect(() => {
-    setRole(role);
-  }, [role, setRole]);
-  return null;
-}
-
 describe('ProtectedLayout', () => {
   it('redirects to / when no role is set and accessing /contracts', () => {
     render(

@@ -1,9 +1,9 @@
-import { render, screen, fireEvent, within } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ContractsTable } from './ContractsTable';
 import { RoleProvider, useRole } from '../context/RoleContext';
-import { Contract } from '../types';
-import { ReactNode } from 'react';
+import type { Contract } from '../types';
+import type { ReactNode } from 'react';
 
 // Helper to set a role before rendering the table
 function RoleWrapper({ role, children }: { role: 'Admin_Kinto' | 'Admin_Local' | 'Asesor'; children: ReactNode }) {
